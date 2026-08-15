@@ -69,48 +69,36 @@ const getTickets = async (req, res) => {
 
     const filter = {};
 
-    // Validate status
-    if (
-      status &&
-      !["Open", "In Progress", "Closed"].includes(status)
-    ) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid ticket status",
-      });
-    }
-
-    // Status filter
     if (status) {
+      const allowedStatuses = ["Open", "In Progress", "Closed"];
+
+      if (!allowedStatuses.includes(status)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid ticket status",
+        });
+      }
+
       filter.status = status;
     }
 
-    // Search filter
     if (search && search.trim()) {
-      const searchTerm = search.trim();
+      const regex = new RegExp(search.trim(), "i");
 
       filter.$or = [
-        {
-          subject: {
-            $regex: searchTerm,
-            $options: "i",
-          },
-        },
-        {
-          description: {
-            $regex: searchTerm,
-            $options: "i",
-          },
-        },
+        { ticket_id: regex },
+        { customer_name: regex },
+        { customer_email: regex },
+        { subject: regex },
+        { description: regex },
       ];
     }
 
-    const tickets = await Ticket.find(filter);
+    const tickets = await Ticket.find(filter)
+      .select("ticket_id customer_name subject status created_at")
+      .sort({ created_at: -1 });
 
-    return res.status(200).json({
-      success: true,
-      tickets,
-    });
+    return res.status(200).json(tickets);
   } catch (error) {
     console.error("Get tickets error:", error);
 
@@ -120,6 +108,8 @@ const getTickets = async (req, res) => {
     });
   }
 };
+
+
 const getTicketById = async (req, res) => {
   try {
     const { ticket_id } = req.params;
