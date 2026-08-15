@@ -2,6 +2,12 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { createTicket } from "../api/tickets";
 
+const fields = [
+  { name: "customer_name", label: "Customer name", type: "text" },
+  { name: "customer_email", label: "Customer email", type: "email" },
+  { name: "subject", label: "Subject", type: "text" },
+];
+
 const CreateTicket = () => {
   const navigate = useNavigate();
 
@@ -15,9 +21,7 @@ const CreateTicket = () => {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
 
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
+  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -40,52 +44,41 @@ const CreateTicket = () => {
     }
   };
 
+  const inputClass =
+    "w-full border border-[var(--color-border)] rounded-lg px-3.5 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/20 focus:border-[var(--color-accent)] transition-all";
+
   return (
-    <div className="p-6 max-w-lg mx-auto">
-      <h1 className="text-2xl font-semibold mb-4">New Ticket</h1>
+    <div className="max-w-lg mx-auto px-6 py-10">
+      <h1 className="text-2xl font-semibold tracking-tight mb-1">New ticket</h1>
+      <p className="text-sm text-[var(--color-ink-soft)] mb-8">
+        Log a new customer issue for the support queue.
+      </p>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium mb-1">Customer Name</label>
-          <input
-            type="text"
-            name="customer_name"
-            value={form.customer_name}
-            onChange={handleChange}
-            className="w-full border rounded-md px-3 py-2 text-sm"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium mb-1">Customer Email</label>
-          <input
-            type="email"
-            name="customer_email"
-            value={form.customer_email}
-            onChange={handleChange}
-            className="w-full border rounded-md px-3 py-2 text-sm"
-          />
-        </div>
+      <form
+        onSubmit={handleSubmit}
+        className="bg-white border border-[var(--color-border)] rounded-xl p-6 space-y-5"
+      >
+        {fields.map((field) => (
+          <div key={field.name}>
+            <label className="block text-sm font-medium mb-1.5">{field.label}</label>
+            <input
+              type={field.type}
+              name={field.name}
+              value={form[field.name]}
+              onChange={handleChange}
+              className={inputClass}
+            />
+          </div>
+        ))}
 
         <div>
-          <label className="block text-sm font-medium mb-1">Subject</label>
-          <input
-            type="text"
-            name="subject"
-            value={form.subject}
-            onChange={handleChange}
-            className="w-full border rounded-md px-3 py-2 text-sm"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium mb-1">Description</label>
+          <label className="block text-sm font-medium mb-1.5">Description</label>
           <textarea
             name="description"
             value={form.description}
             onChange={handleChange}
             rows={4}
-            className="w-full border rounded-md px-3 py-2 text-sm"
+            className={inputClass}
           />
         </div>
 
@@ -94,9 +87,9 @@ const CreateTicket = () => {
         <button
           type="submit"
           disabled={submitting}
-          className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm hover:bg-blue-700 disabled:opacity-50"
+          className="w-full bg-[var(--color-accent)] text-white px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-[var(--color-accent-hover)] disabled:opacity-50 transition-colors"
         >
-          {submitting ? "Creating..." : "Create Ticket"}
+          {submitting ? "Creating..." : "Create ticket"}
         </button>
       </form>
     </div>
