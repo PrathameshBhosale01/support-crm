@@ -65,11 +65,52 @@ const createTicket = async (req, res) => {
 
 const getTickets = async (req, res) => {
   try {
-    const tickets = await Ticket.find()
-      .select("ticket_id customer_name subject status created_at")
-      .sort({ created_at: -1 });
+    const { search, status } = req.query;
 
-    return res.status(200).json(tickets);
+    const filter = {};
+
+    // Validate status
+    if (
+      status &&
+      !["Open", "In Progress", "Closed"].includes(status)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid ticket status",
+      });
+    }
+
+    // Status filter
+    if (status) {
+      filter.status = status;
+    }
+
+    // Search filter
+    if (search && search.trim()) {
+      const searchTerm = search.trim();
+
+      filter.$or = [
+        {
+          subject: {
+            $regex: searchTerm,
+            $options: "i",
+          },
+        },
+        {
+          description: {
+            $regex: searchTerm,
+            $options: "i",
+          },
+        },
+      ];
+    }
+
+    const tickets = await Ticket.find(filter);
+
+    return res.status(200).json({
+      success: true,
+      tickets,
+    });
   } catch (error) {
     console.error("Get tickets error:", error);
 
@@ -79,7 +120,6 @@ const getTickets = async (req, res) => {
     });
   }
 };
-
 const getTicketById = async (req, res) => {
   try {
     const { ticket_id } = req.params;
