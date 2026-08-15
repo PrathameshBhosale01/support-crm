@@ -63,6 +63,22 @@ const createTicket = async (req, res) => {
     }
 };
 
+const getTickets = async (req, res) => {
+  try {
+    const tickets = await Ticket.find()
+      .select("ticket_id customer_name subject status created_at")
+      .sort({ created_at: -1 });
+
+    return res.status(200).json(tickets);
+  } catch (error) {
+    console.error("Get tickets error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch tickets",
+    });
+  }
+};
 module.exports = {
-    createTicket,
+    createTicket,  getTickets,
 };
