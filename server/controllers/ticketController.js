@@ -1,5 +1,5 @@
 const Ticket = require("../models/Ticket");
-
+const Note = require("../models/Note");
 const createTicket = async (req, res) => {
     try {
         const {
@@ -79,6 +79,48 @@ const getTickets = async (req, res) => {
     });
   }
 };
+
+const getTicketById = async (req, res) => {
+  try {
+    const { ticket_id } = req.params;
+
+    const ticket = await Ticket.findOne({ ticket_id })
+      .select(
+        "ticket_id customer_name customer_email subject description status created_at updated_at"
+      );
+
+    if (!ticket) {
+      return res.status(404).json({
+        success: false,
+        message: "Ticket not found",
+      });
+    }
+
+    const notes = await Note.find({ ticket_id })
+      .select("note_text created_at")
+      .sort({ created_at: 1 });
+
+    return res.status(200).json({
+      ticket_id: ticket.ticket_id,
+      customer_name: ticket.customer_name,
+      customer_email: ticket.customer_email,
+      subject: ticket.subject,
+      description: ticket.description,
+      status: ticket.status,
+      created_at: ticket.created_at,
+      updated_at: ticket.updated_at,
+      notes,
+    });
+  } catch (error) {
+    console.error("Get ticket error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch ticket",
+    });
+  }
+};
+
 module.exports = {
-    createTicket,  getTickets,
+    createTicket,  getTickets,getTicketById,
 };
