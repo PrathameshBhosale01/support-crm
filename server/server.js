@@ -5,10 +5,16 @@ const cors = require("cors");
 require("dotenv").config();
 
 const connectDB = require("./config/db");
+const ticketRoutes = require("./routes/ticketRoutes");
 
 const app = express();
 
 const PORT = process.env.PORT || 5000;
+
+const Ticket = require("./models/Ticket");
+const Note = require("./models/Note");
+
+
 
 // Connect to MongoDB
 connectDB();
@@ -16,6 +22,9 @@ connectDB();
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+
+app.use("/api/tickets", ticketRoutes);
 
 // Health check
 app.get("/", (req, res) => {
@@ -27,3 +36,6 @@ app.get("/", (req, res) => {
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
+
+console.log("Ticket model loaded:", !!Ticket);
+console.log("Note model loaded:", !!Note);
