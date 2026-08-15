@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { Search, Plus, Inbox } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { Search, Plus, Inbox, ChevronRight } from "lucide-react";
 import { getTickets } from "../api/tickets";
 
 const statusStyles = {
@@ -30,7 +30,7 @@ const StatusPill = ({ status }) => {
 
 const SkeletonRow = () => (
   <tr className="border-t border-[var(--color-border)]">
-    {Array.from({ length: 5 }).map((_, i) => (
+    {Array.from({ length: 6 }).map((_, i) => (
       <td key={i} className="px-4 py-4">
         <div
           className="h-3.5 bg-gray-100 rounded animate-pulse"
@@ -42,6 +42,8 @@ const SkeletonRow = () => (
 );
 
 const TicketList = () => {
+  const navigate = useNavigate();
+
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -97,8 +99,24 @@ const TicketList = () => {
         </Link>
       </div>
 
-      <div className="flex gap-3 mb-6">
-        <div className="relative flex-1">
+      <div className="flex items-center justify-between gap-4 mb-6 flex-wrap">
+        <div className="inline-flex items-center gap-1 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg p-1">
+          {statusOptions.map((opt) => (
+            <button
+              key={opt}
+              onClick={() => setStatus(opt)}
+              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                status === opt
+                  ? "bg-[var(--color-accent)] text-white"
+                  : "text-[var(--color-ink-soft)] hover:text-[var(--color-ink)]"
+              }`}
+            >
+              {opt === "All" ? "All Tickets" : opt}
+            </button>
+          ))}
+        </div>
+
+        <div className="relative flex-1 min-w-[240px] max-w-sm">
           <Search
             size={16}
             className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--color-ink-soft)]"
@@ -111,18 +129,6 @@ const TicketList = () => {
             className="w-full border border-[var(--color-border)] rounded-lg pl-10 pr-3 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/20 focus:border-[var(--color-accent)] transition-all"
           />
         </div>
-
-        <select
-          value={status}
-          onChange={(e) => setStatus(e.target.value)}
-          className="border border-[var(--color-border)] rounded-lg px-3 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/20 focus:border-[var(--color-accent)] transition-all"
-        >
-          {statusOptions.map((opt) => (
-            <option key={opt} value={opt}>
-              {opt}
-            </option>
-          ))}
-        </select>
       </div>
 
       {error && <p className="text-red-600 text-sm mb-4">{error}</p>}
@@ -136,6 +142,7 @@ const TicketList = () => {
               <th className="px-4 py-3 font-medium">Subject</th>
               <th className="px-4 py-3 font-medium">Status</th>
               <th className="px-4 py-3 font-medium">Created</th>
+              <th className="px-4 py-3 w-8" />
             </tr>
           </thead>
           <tbody>
@@ -143,7 +150,7 @@ const TicketList = () => {
 
             {!loading && tickets.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-4 py-16">
+                <td colSpan={6} className="px-4 py-16">
                   <div className="flex flex-col items-center text-center">
                     <Inbox
                       size={28}
@@ -167,16 +174,12 @@ const TicketList = () => {
               tickets.map((ticket, i) => (
                 <tr
                   key={ticket.ticket_id}
-                  className="border-t border-[var(--color-border)] hover:bg-[var(--color-bg)] transition-colors animate-fade-in"
+                  onClick={() => navigate(`/tickets/${ticket.ticket_id}`)}
+                  className="border-t border-[var(--color-border)] hover:bg-[var(--color-bg)] transition-colors animate-fade-in cursor-pointer"
                   style={{ animationDelay: `${i * 30}ms`, animationFillMode: "backwards" }}
                 >
-                  <td className="px-4 py-3.5">
-                    <Link
-                      to={`/tickets/${ticket.ticket_id}`}
-                      className="text-[var(--color-accent)] font-medium hover:underline"
-                    >
-                      {ticket.ticket_id}
-                    </Link>
+                  <td className="px-4 py-3.5 text-[var(--color-accent)] font-medium">
+                    {ticket.ticket_id}
                   </td>
                   <td className="px-4 py-3.5">{ticket.customer_name}</td>
                   <td className="px-4 py-3.5 text-[var(--color-ink-soft)]">{ticket.subject}</td>
@@ -185,6 +188,9 @@ const TicketList = () => {
                   </td>
                   <td className="px-4 py-3.5 text-[var(--color-ink-soft)]">
                     {new Date(ticket.created_at).toLocaleDateString()}
+                  </td>
+                  <td className="px-4 py-3.5 text-[var(--color-ink-soft)]">
+                    <ChevronRight size={16} />
                   </td>
                 </tr>
               ))}
