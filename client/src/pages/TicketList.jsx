@@ -8,16 +8,36 @@ const statusColors = {
   Closed: "bg-green-100 text-green-700",
 };
 
+const statusOptions = ["All", "Open", "In Progress", "Closed"];
+
 const TicketList = () => {
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const [searchInput, setSearchInput] = useState("");
+  const [search, setSearch] = useState("");
+  const [status, setStatus] = useState("All");
+
+  // Debounce: wait 400ms after typing stops before updating `search`
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearch(searchInput.trim());
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [searchInput]);
+
   useEffect(() => {
     const fetchTickets = async () => {
       try {
         setLoading(true);
-        const data = await getTickets();
+
+        const params = {};
+        if (search) params.search = search;
+        if (status !== "All") params.status = status;
+
+        const data = await getTickets(params);
         setTickets(data);
         setError(null);
       } catch (err) {
@@ -29,15 +49,7 @@ const TicketList = () => {
     };
 
     fetchTickets();
-  }, []);
-
-  if (loading) {
-    return <p className="p-6 text-gray-500">Loading tickets...</p>;
-  }
-
-  if (error) {
-    return <p className="p-6 text-red-600">{error}</p>;
-  }
+  }, [search, status]);
 
   return (
     <div className="p-6 max-w-5xl mx-auto">
@@ -51,11 +63,39 @@ const TicketList = () => {
         </Link>
       </div>
 
-      {tickets.length === 0 ? (
+      <div className="flex gap-3 mb-4">
+        <input
+          type="text"
+          placeholder="Search by name, ID, email, subject..."
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
+          className="flex-1 border rounded-md px-3 py-2 text-sm"
+        />
+
+        <select
+          value={status}
+          onChange={(e) => setStatus(e.target.value)}
+          className="border rounded-md px-3 py-2 text-sm"
+        >
+          {statusOptions.map((opt) => (
+            <option key={opt} value={opt}>
+              {opt}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {loading && <p className="text-gray-500">Loading tickets...</p>}
+
+      {error && <p className="text-red-600">{error}</p>}
+
+      {!loading && !error && tickets.length === 0 && (
         <p className="text-gray-500">
-          No tickets found. Create your first ticket.
+          No tickets match your search. Try a different term or filter.
         </p>
-      ) : (
+      )}
+
+      {!loading && !error && tickets.length > 0 && (
         <div className="overflow-x-auto border rounded-lg">
           <table className="w-full text-sm text-left">
             <thead className="bg-gray-50 text-gray-600 uppercase text-xs">
