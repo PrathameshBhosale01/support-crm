@@ -121,6 +121,58 @@ const getTicketById = async (req, res) => {
   }
 };
 
+const updateTicket = async (req, res) => {
+  try {
+    const { ticket_id } = req.params;
+    const { status, notes } = req.body;
+
+    // Find the ticket
+    const ticket = await Ticket.findOne({ ticket_id });
+
+    if (!ticket) {
+      return res.status(404).json({
+        success: false,
+        message: "Ticket not found",
+      });
+    }
+
+    // Update status if provided
+    if (status !== undefined) {
+      if (!["Open", "In Progress", "Closed"].includes(status)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid ticket status",
+        });
+      }
+
+      ticket.status = status;
+    }
+
+    // Save ticket changes
+    await ticket.save();
+
+    // Add note if provided
+    if (notes && notes.trim()) {
+      await Note.create({
+        ticket_id,
+        note_text: notes.trim(),
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      updated_at: ticket.updated_at,
+    });
+  } catch (error) {
+    console.error("Update ticket error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to update ticket",
+    });
+  }
+};
+
 module.exports = {
-    createTicket,  getTickets,getTicketById,
+    createTicket,  getTickets,getTicketById,updateTicket,
 };
